@@ -1,0 +1,236 @@
+## R code for analysis of Thailand Isotope Data.
+
+Cyler Conrad, Department of Anthropology, University of New Mexico, cylerc@unm.edu
+
+Charlotte L. King, Department of Anatomy, University of Otago, charlotte.king@otago.ac.nz
+
+Ben Marwick, Department of Anthropology, University of Washington, bmarwick@uw.edu
+
+This document contain R code to reproduce the plots and statistical analysis presented in: 
+
+> Conrad, C., King, C.L. and Marwick, B. (in preparation) Oxygen (δ18O) Isotope Variability in Human Tooth Enamel from Northeast Thailand. Archaeological Research in Asia. 
+
+All data required to perform the analyses can be found at the XXXX digital electronic repository (XXXX). The development version of this document can be found at https://github.com/cylerc/ARA_TI
+
+Details of the computational environment and software dependencies are listed at the end of this document. 
+
+References: 
+XXXX
+
+```{r setup}
+# set the base directory for knitr to the directory above this one
+# install.packages(c("ggmap", "ggplot2", "siar", "devtools"))
+library(knitr)
+opts_knit$set(root.dir = '../', progress = FALSE)
+```
+
+```{r load_libraries, message = FALSE, warning = FALSE}
+# see the output of sessionInfo() at the bottom for package version numbers
+library(ggmap)
+library(ggplot2) 
+library(siar)
+library(devtools)
+```
+
+```{r load dataset and map sites}
+#1. Data is transcribed from published literature (see Conrad et al. in preparation) and is uploaded here from a source .csv file.
+thai <- read.csv("Data/Thai_Human_Iso.csv")
+thai
+#2. Create matrix to plot sites in NE Thailand. Decimal latitude and longitude from published literature (see Conrad et al. in preparation).
+sites <-read.table(text="
+  id lat lon
+  BC 17.40638889 103.2397222
+  BLK 15.24888889 102.3430556
+  NUL 15.24888889 102.3430556
+  KPD 13.41666667 101.1666667
+  BNW 15.26722222 102.2763889", header=TRUE)
+sites
+map <- get_map(location = 'Thailand', zoom = 7)
+ggmap(map) + 
+  geom_point(data=sites, aes(x = lon, y = lat),alpha = .8, color="darkred", size = 5) + 
+  geom_text(data = sites, aes(x = lon, y = lat, label = id), size = 4, vjust = 0, hjust = -0.5, face="bold", position = position_jitter(w = 0.0, h = 0.5)) +
+  xlab("Longitude") + 
+  ylab("Latitude") + 
+  labs(title="Sites in Northeast Thailand")
+#Because BNW, NUL and BLK are so close together, the automated commands in R to label these points do not work well. We may have to play with this map more. 
+fig_width <- 300 # play with this number and save as high resolution png
+ggsave(filename = "Figures/Map.png",
+       dpi = 600, units = "mm",
+       height = fig_width/1.6, width =  fig_width)
+```
+
+``` {r plot isotope data}
+#1. Create plot of all enamel apatite data. Oxygen to Carbon. 
+cols <- c("1" = "red","2" = "black","3" = "green", "4" = "orange", "5" = "blue")
+ggplot(data=thai, aes(thai$X18o, thai$X13c, colour = factor(thai$Group))) +
+  geom_point(size=5, alpha = 0.75) +
+  xlab(expression(paste(delta^{18},'O'))) +
+  ylab(expression(paste(delta^{13},'C'))) +
+  xlim(23,29) +
+  ylim(-16,-6) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(colour="white", fill="white"),
+        strip.text.x = element_text(colour = "black", size = 15),
+        axis.title.x = element_text(face="bold", colour="black", size=20),
+        axis.text.x  = element_text(colour="black", vjust=0.5, size=15),
+        axis.title.y = element_text(face="bold", colour="black", size=20),
+        axis.text.y  = element_text(colour="black", vjust=0.5, size=15),
+        legend.text = element_text(size=15), 
+        legend.title = element_text(size=15)) +
+  scale_colour_manual(name = "Site", values = cols, breaks = c("1", "2", "3", "4", "5"),
+                      labels = c("Ban Chiang", "Ban Lum Khao",
+                                 "Noen U-Loke", "Ban Non Wat", "Khok Phanom Di"))
+fig_width <- 300 
+ggsave(filename = "Figures/Oxygen-Carbon.png",
+       dpi = 600, units = "mm",
+       height = fig_width/1.6, width =  fig_width)
+
+#Carbon to Oxygen
+cols <- c("1" = "red","2" = "black","3" = "green", "4" = "orange", "5" = "blue")
+ggplot(data=thai, aes(thai$X13c, thai$X18o, colour = factor(thai$Group))) +
+  geom_point(size=5, alpha = 0.75) +
+  xlab(expression(paste(delta^{13},'C'))) +
+  ylab(expression(paste(delta^{18},'O'))) +
+  xlim(-16,-6) +
+  ylim(23,29) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_rect(colour="white", fill="white"),
+        strip.text.x = element_text(colour = "black", size = 15),
+        axis.title.x = element_text(face="bold", colour="black", size=20),
+        axis.text.x  = element_text(colour="black", vjust=0.5, size=15),
+        axis.title.y = element_text(face="bold", colour="black", size=20),
+        axis.text.y  = element_text(colour="black", vjust=0.5, size=15),
+        legend.text = element_text(size=15), 
+        legend.title = element_text(size=15)) +
+  scale_colour_manual(name = "Site", values = cols, breaks = c("1", "2", "3", "4", "5"),
+                      labels = c("Ban Chiang", "Ban Lum Khao",
+                                 "Noen U-Loke", "Ban Non Wat", "Khok Phanom Di"))
+fig_width <- 300 
+ggsave(filename = "Figures/Carbon-Oxygen.png",
+       dpi = 600, units = "mm",
+       height = fig_width/1.6, width =  fig_width)
+```
+
+```{r SIBER standard ellipse areas}
+#1. Plotting standard ellipse areas for all sites. Colors match previous plots. 
+rm(list = ls())
+#Clear dataframe. 
+graphics.off()
+#Reload data. 
+thai <- read.csv("Data/Thai_Human_Iso.csv")
+thai
+ngroups <- length(unique(thai$Group))
+spx <- split(thai$X18o, thai$Group)
+spy <- split(thai$X13c, thai$Group)
+SEA <- numeric(ngroups)
+SEAc <- numeric(ngroups)
+TA <- numeric(ngroups)
+colorgroup = c(rep("red",length(which(thai$Group==1)))
+               ,rep("black",length(which(thai$Group==2)))
+               ,rep("green",length(which(thai$Group==3)))
+               ,rep("orange",length(which(thai$Group==4)))
+               ,rep("blue",length(which(thai$Group==5))))
+pchgroup = c(rep(16,length(which(thai$Group==1)))
+             ,rep(16,length(which(thai$Group==2)))
+             ,rep(16,length(which(thai$Group==3)))
+             ,rep(16,length(which(thai$Group==4)))
+             ,rep(16,length(which(thai$Group==5))))
+png('Figures/StandardEllipseArea.png')
+plot(thai$X18o,thai$X13c,col=colorgroup,type="p",xlim=c(24,29),ylim=c(-16,-6),axes=F,pch=pchgroup, cex=1.5, xlab = expression(~ delta ^"18"~'O'), ylab = expression(~ delta^"13"~'C'))
+box()
+axis(1,at=seq(24,29,1),labels=T)
+axis(2,at=seq(-16,-6,2),labels=F)
+axis(2,at=seq(-16,-6,2),labels=T)
+for (j in unique(thai$Group)){
+  SE <- standard.ellipse(spx[[j]],spy[[j]],steps=1)
+  SEA[j] <- SE$SEA
+  SEAc[j] <- SE$SEAc
+  colorgroup = c('red','black','green','orange','blue')
+  lines(SE$xSEAc,SE$ySEAc,lty=1,lwd=3,col=colorgroup[j])
+}  
+print(cbind(SEA,SEAc))
+dev.off()
+#It would be good to add a legend to this plot. We also need to considerably increase the dpi and overall size.  
+```
+
+```{r frequentist statistical analysis}
+#1. Use frequentist approaches to understand differences between sites. 
+#Create new matrix of values for individual sites.
+BC <- thai[c(1:42), -1]
+BLK <- thai[c(43:68), -1]
+NUL <- thai[c(69:102), -1]
+BNW <- thai[c(103:219), -1]
+KPD <- thai[c(220:285), -1]
+KPD
+
+#Start with Welch Two Sample t-test.
+#BC to BLK
+#We expect to see sig. differences between these two sites in d18O space. 
+component <-c(BC$X18o, BLK$X18o)
+component
+Group <- c(rep("One", length(BC$X18o)), rep("Two", length(BLK$X18o)))
+group1 <- data.frame(component, Group)
+group1
+t.summary.uneqvar <- t.test(component ~ Group, data = group1, var.equal = FALSE)
+t.summary.uneqvar
+#Significantly different at p<0.00001
+
+#BLK and KPD
+#We do not expect to see sig. differences between these two sites in d18O space. 
+component <-c(BLK$X18o, KPD$X18o)
+component
+Group <- c(rep("One", length(BLK$X18o)), rep("Two", length(KPD$X18o)))
+group2 <- data.frame(component, Group)
+group2
+t.summary.uneqvar <- t.test(component ~ Group, data = group2, var.equal = FALSE)
+t.summary.uneqvar
+#Not significantly different at p=0.6036
+
+#...but, what about carbon? These sites should be sig. different in d13C space.
+component <-c(BLK$X13c, KPD$X13c)
+component
+Group <- c(rep("One", length(BLK$X13c)), rep("Two", length(KPD$X13c)))
+group3 <- data.frame(component, Group)
+group3
+t.summary.uneqvar <- t.test(component ~ Group, data = group3, var.equal = FALSE)
+t.summary.uneqvar
+#Significantly different at p<0.00001 when comparing carbon isotope values. 
+```
+
+```{r bayesian statistical analysis}
+#1. Use bayesian approaches to understand differences between sites. 
+#This needs work here...I'm not entirely sure how to do this in R yet...
+```
+
+```{r session_info}
+# Computational environment and software dependencies for this analysis.
+sessionInfo()
+```
+
+LICENSE
+ 
+The MIT License (MIT)
+
+Copyright (c) 2015 Cyler Conrad, Charlotte L. King & Ben Marwick
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
