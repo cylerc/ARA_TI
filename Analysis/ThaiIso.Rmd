@@ -165,7 +165,6 @@ BLK <- thai[c(43:68), -1]
 NUL <- thai[c(69:102), -1]
 BNW <- thai[c(103:219), -1]
 KPD <- thai[c(220:285), -1]
-KPD
 
 #Start with Welch Two Sample t-test.
 #BC to BLK
