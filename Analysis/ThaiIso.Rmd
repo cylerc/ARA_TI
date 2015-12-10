@@ -716,16 +716,6 @@ print(cbind(SEA,SEAc))
 dev.off()
 ```
 
-Use Bayesian standard ellipse areas to explore differences between sexes.
-
-```{r SIBER standard ellipse areas - by sex}
-```
-
-Statistically analyze these differences using frequentist statistics. 
-
-```{r SIBER standard ellipse areas - by sex}
-```
-
 ##### Bayesian Approaches not completed #####
 
 ```{r bayesian statistical analysis}
